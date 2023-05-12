@@ -22,16 +22,19 @@ if [[ ! $(lsblk -o MOUNTPOINT "/dev/$usb_drive" | tail -1) == "" ]]; then
     exit 1
 fi
 
-# Mount the selected partition
-echo "Mounting /dev/${usb_drive}1 to /mnt..."
-sudo mount "/dev/${usb_drive}1" /mnt
+# Get the first partition of the selected drive
+usb_partition=$(ls "/dev/${usb_drive}"* | grep -E "^/dev/${usb_drive}[[:digit:]]$" | head -1)
 
-# Copy and compress files from the current user folder to a .tar.gz file on the selected USB drive
-echo "Copying and compressing files to /dev/${usb_drive}..."
-sudo tar -czpf /mnt/files-$(date +%Y-%m-%d).tar.gz --exclude=klipper --exclude=moonraker --exclude=mainsail --exclude=kiauh --exclude=crowsnest --exclude=KlipperScreen -C /home/$(whoami) .
+# Mount the selected partition
+echo "Mounting ${usb_partition}..."
+sudo mount "${usb_partition}" /mnt
+
+# Copy and compress files from the current user folder to a .tag.xz file on the selected USB drive
+echo "Copying and compressing files to ${usb_partition}..."
+sudo tar -cpzf /mnt/backup-$(date +%Y-%m-%d).tar.gz /home/$USER/printer_data/config /home/$USER/printer_data/database /home/$USER/printer_data/gcodes
 
 # Unmount the USB drive
-echo "Unmounting /dev/${usb_drive}1 from /mnt..."
+echo "Unmounting ${usb_partition}..."
 sudo umount /mnt
 
 echo "Done."
